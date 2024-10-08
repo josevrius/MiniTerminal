@@ -1,10 +1,8 @@
-package entities.minifilemanager;
+package entities;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -13,7 +11,7 @@ public final class MiniFileManager {
     private File getCurrentPath() {
         File currentPath = new File(System.getProperty("user.dir"));
 
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
         return currentPath;
     }
 
@@ -27,37 +25,32 @@ public final class MiniFileManager {
         }
 
         if (!path.isEmpty() && !path.isBlank() && newPath.exists()) {
-            MiniFileManagerUtils.showPath(newPath);
+            showPath(newPath);
         } else {
-            newPath = currentPath;
             System.out.println("ERROR: El directorio no existe");
-            MiniFileManagerUtils.showPath(currentPath);
+            newPath = currentPath;
+            showPath(currentPath);
         }
         return newPath;
     }
 
     private void list(File currentPath, String command) {
-        long size;
-        Date date;
         boolean longListOK = command.equals("ll");
 
         System.out.println();
         for (File file : currentPath.listFiles()) {
             if (file.isDirectory()) {
-                size = file.length();
-                date = new Date(file.lastModified());
-                System.out.println(file.getName() + (longListOK ? " | " + size + " | " + date : ""));
+                showInfo(file, longListOK);
             }
         }
+
         for (File file : currentPath.listFiles()) {
             if (file.isFile()) {
-                size = file.length();
-                date = new Date(file.lastModified());
-                System.out.println(file.getName() + (longListOK ? " | " + size + " | " + date : ""));
+                showInfo(file, longListOK);
             }
         }
         System.out.println();
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
     }
 
     private void createDir(File currentPath, String dir) {
@@ -68,7 +61,7 @@ public final class MiniFileManager {
         } else {
             newPath.mkdir();
         }
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
     }
 
     private void createFile(File currentPath, String file) {
@@ -83,7 +76,7 @@ public final class MiniFileManager {
                 System.out.println(e.getMessage());
             }
         }
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
     }
 
     private void writeDocument(File currentPath, String text, String file) {
@@ -91,10 +84,9 @@ public final class MiniFileManager {
 
         if (newPath.isFile() && newPath.canWrite()) {
             if ((text.startsWith("\"") && text.endsWith("\""))) {
-                text = MiniFileManagerUtils.debugText(text);
-                try {
-                    Files.write(newPath.toPath(), text.getBytes(), StandardOpenOption.APPEND);
-                    Files.write(newPath.toPath(), "\n".getBytes(), StandardOpenOption.APPEND);
+                text = debugText(text);
+                try (FileWriter fw = new FileWriter(newPath, true)) {
+                    fw.write(text + System.lineSeparator());
                 } catch (Exception e) {
                     System.out.println("ERROR: no se puede escribir en el documento");
                 }
@@ -106,7 +98,7 @@ public final class MiniFileManager {
                 }
             }
         }
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
     }
 
     private void delete(File currentPath, String path) {
@@ -117,7 +109,7 @@ public final class MiniFileManager {
         } else {
             System.out.println("ERROR: La ruta no existe");
         }
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
     }
 
     private void rename(File currentPath, String ActualName, String newName) {
@@ -128,7 +120,7 @@ public final class MiniFileManager {
         } else {
             System.out.println("ERROR: El fichero no existe");
         }
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
     }
 
     private void showHelp(File currentPath) {
@@ -149,7 +141,7 @@ public final class MiniFileManager {
         System.out.println("help .....................: Muestra la lista de comandos");
         System.out.println("exit .....................: Termina el programa");
         System.out.println();
-        MiniFileManagerUtils.showPath(currentPath);
+        showPath(currentPath);
     }
 
     public void enterCommand() {
@@ -162,7 +154,7 @@ public final class MiniFileManager {
         boolean exit = false;
 
         do {
-            input = MiniFileManagerUtils.debugInput(new Scanner(System.in).nextLine());
+            input = debugInput(new Scanner(System.in).nextLine());
             command = input[0];
             if (input.length > 1) {
                 argument = input[1];
@@ -185,12 +177,30 @@ public final class MiniFileManager {
                     case "exit" -> exit = true;
                     default -> {
                         System.out.println("ERROR: Comando incorrecto");
-                        MiniFileManagerUtils.showPath(currentPath);
+                        showPath(currentPath);
                     }
                 }
             } catch (Exception e) {
-                MiniFileManagerUtils.showPath(currentPath);
+                showPath(currentPath);
             }
         } while (!exit);
+    }
+
+    private String[] debugInput(String input) {
+        return input.split(" ", 2);
+    }
+
+    private String debugText(String text) {
+        return text.substring(1, text.length() - 1);
+    }
+
+    private void showPath(File path) {
+        System.out.print(path.getAbsolutePath() + " > ");
+    }
+
+    private void showInfo(File file, boolean longListOK) {
+        long size = file.length();
+        Date date = new Date(file.lastModified());
+        System.out.println(file.getName() + (longListOK ? " | " + size + " | " + date : ""));
     }
 }
