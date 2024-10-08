@@ -1,12 +1,11 @@
-package app;
+package org.jvrb.java.app;
 
-import entities.MiniFileManager;
+import org.jvrb.java.entities.MiniFileManager;
 
-public final class MiniTerminal {
+public class MiniTerminal {
 
-    public void launchApp() {
+    public static void main(String[] args) {
 
-        System.out.println();
         System.out.println("MINI TERMINAL");
         System.out.println("=============");
         MiniFileManager mfm = new MiniFileManager();

@@ -1,5 +1,6 @@
-package entities;
+package org.jvrb.java.entities;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -7,13 +8,6 @@ import java.util.Date;
 import java.util.Scanner;
 
 public final class MiniFileManager {
-
-    private File getCurrentPath() {
-        File currentPath = new File(System.getProperty("user.dir"));
-
-        showPath(currentPath);
-        return currentPath;
-    }
 
     private File getNewPath(File currentPath, String path) {
         File newPath;
@@ -37,7 +31,6 @@ public final class MiniFileManager {
     private void list(File currentPath, String command) {
         boolean longListOK = command.equals("ll");
 
-        System.out.println();
         for (File file : currentPath.listFiles()) {
             if (file.isDirectory()) {
                 showInfo(file, longListOK);
@@ -49,7 +42,6 @@ public final class MiniFileManager {
                 showInfo(file, longListOK);
             }
         }
-        System.out.println();
         showPath(currentPath);
     }
 
@@ -82,11 +74,19 @@ public final class MiniFileManager {
     private void writeDocument(File currentPath, String text, String file) {
         File newPath = new File(currentPath, file);
 
+        if (!newPath.exists()) {
+            try {
+                newPath.createNewFile();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
         if (newPath.isFile() && newPath.canWrite()) {
             if ((text.startsWith("\"") && text.endsWith("\""))) {
                 text = debugText(text);
-                try (FileWriter fw = new FileWriter(newPath, true)) {
-                    fw.write(text + System.lineSeparator());
+                try (BufferedWriter bw = new BufferedWriter(new FileWriter(newPath, true))) {
+                    bw.write(text + System.lineSeparator());
                 } catch (Exception e) {
                     System.out.println("ERROR: no se puede escribir en el documento");
                 }
@@ -131,13 +131,13 @@ public final class MiniFileManager {
         System.out.println("cd <DIR> .................: Cambia de directorio");
         System.out.println("cd <..> ..................: Cambia al directorio anterior");
         System.out.println("ls .......................: Muestra el contenido de la carpeta actual");
-        System.out.println("ll .......................: Muestra el contenido de la carpeta actual con el tamaño y la fecha");
-        System.out.println("mkdir <DIR> ..............: Crea un directorio en la carpeta actual");
-        System.out.println("touch <FILE> .............: Crea un archivo en la carpeta actual");
+        System.out.println("ll .......................: Muestra el contenido extendido de la carpeta actual");
+        System.out.println("mkdir <DIR> ..............: Crea un carpeta en el directorio actual");
+        System.out.println("touch <FILE> .............: Crea un archivo en el directorio actual");
         System.out.println("echo \"<TEXT>\" / <FILE> ...: Escribe una línea de texto en el archivo indicado");
-        System.out.println("echo rm / <FILE> .........: Borra el contenido del archivo de texto indicado");
-        System.out.println("rm <FILE> ................: Borra un directorio o archivo en la carpeta actual");
-        System.out.println("mv <FILE1> / <FILE2> .....: Cambia de nombre una carpeta o archivo en la carpeta actual");
+        System.out.println("echo rm / <FILE> .........: Borra todo el texto en el archivo indicado");
+        System.out.println("rm <FILE> ................: Borra una carpeta o archivo en el directorio actual");
+        System.out.println("mv <FILE1> / <FILE2> .....: Cambia de nombre una carpeta o archivo en el directorio actual");
         System.out.println("help .....................: Muestra la lista de comandos");
         System.out.println("exit .....................: Termina el programa");
         System.out.println();
@@ -184,6 +184,13 @@ public final class MiniFileManager {
                 showPath(currentPath);
             }
         } while (!exit);
+    }
+
+    private File getCurrentPath() {
+        File currentPath = new File(System.getProperty("user.dir"));
+
+        showPath(currentPath);
+        return currentPath;
     }
 
     private String[] debugInput(String input) {
